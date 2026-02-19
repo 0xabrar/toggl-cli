@@ -4,6 +4,10 @@ Simple command-line tools for interacting with the [Toggl Track](https://track.t
 
 Built with [Bun](https://bun.sh) and TypeScript.
 
+## Why
+
+Designed to work with AI coding assistants like [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Point Claude Code at this repo and interact with your Toggl entirely through conversation — start timers, check what's running, pull reports, reorganize projects. Use the Toggl web app for the nice visual dashboards; use this for everything else.
+
 ## Setup
 
 ```bash
@@ -13,21 +17,24 @@ export TOGGL_API_TOKEN="your-api-token"
 
 Get your API token from the bottom of your [Toggl profile page](https://track.toggl.com/profile).
 
+Workspace ID and project data are auto-cached to `~/.toggl-cache.json` (24h TTL) to minimize API calls.
+
 ## Usage
 
-### Reports
-
-Pull a summary report broken down by project for a date range.
+### Timer Control
 
 ```bash
-bun src/report.ts                        # this week (default)
-bun src/report.ts --from this-month      # month to date
-bun src/report.ts --from 2026-01-01 --to 2026-01-31
+# What's currently running?
+bun src/entries.ts current
+
+# Start a timer
+bun src/entries.ts start --project "Product" --description "Working on auth flow"
+
+# Stop the running timer
+bun src/entries.ts stop
 ```
 
 ### Time Entries
-
-List recent entries or add retroactive ones.
 
 ```bash
 # List today's entries
@@ -40,9 +47,17 @@ bun src/entries.ts list --from yesterday --to today
 bun src/entries.ts add --project "Product" --date 2026-02-18 --start 14:00 --end 17:00 --description "Worked on auth flow"
 ```
 
-### Projects
+### Reports
 
-List, rename, or merge projects.
+Pull a summary report broken down by project for a date range.
+
+```bash
+bun src/report.ts                        # this week (default)
+bun src/report.ts --from this-month      # month to date
+bun src/report.ts --from 2026-01-01 --to 2026-01-31
+```
+
+### Projects
 
 ```bash
 # List all projects with total hours

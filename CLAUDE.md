@@ -20,9 +20,12 @@ Uses `TOGGL_API_TOKEN` env var. Workspace ID and projects are auto-detected and 
 ## Scripts
 
 ```
-bun src/report.ts [--from DATE] [--to DATE]          # summary by project (default: this week)
+bun src/entries.ts current                            # show running timer
+bun src/entries.ts start --project NAME [--description "..."]   # start a timer
+bun src/entries.ts stop                               # stop running timer
 bun src/entries.ts list [--from DATE] [--to DATE]     # list time entries (default: today)
 bun src/entries.ts add --project NAME --date YYYY-MM-DD --start HH:MM --end HH:MM [--description "..."]
+bun src/report.ts [--from DATE] [--to DATE]           # summary by project (default: this week)
 bun src/projects.ts list                              # list projects with hours
 bun src/projects.ts rename "Old" "New"                # rename a project
 bun src/projects.ts merge "Source" "Target"           # move entries between projects
