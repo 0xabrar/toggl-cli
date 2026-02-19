@@ -6,7 +6,6 @@ import {
   getProjects,
   formatDuration,
   parseDate,
-  type Project,
   type TimeEntry,
 } from "./api";
 
@@ -112,7 +111,7 @@ async function addEntry(args: string[]) {
     process.exit(1);
   }
 
-  const entry = await togglPost(`/workspaces/${wid}/time_entries`, {
+  await togglPost(`/workspaces/${wid}/time_entries`, {
     workspace_id: wid,
     project_id: match.id,
     start: startISO,
