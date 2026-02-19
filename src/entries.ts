@@ -2,6 +2,7 @@ import { parseArgs } from "util";
 import {
   togglGet,
   togglPost,
+  togglPatch,
   getWorkspaceId,
   getProjects,
   formatDuration,
@@ -120,6 +121,84 @@ async function addEntry(args: string[]) {
   );
 }
 
+async function currentEntry() {
+  const [entry, projects] = await Promise.all([
+    togglGet<TimeEntry | null>("/me/time_entries/current"),
+    getProjects(),
+  ]);
+
+  if (!entry) {
+    console.log("No timer running.");
+    return;
+  }
+
+  const project = entry.project_id
+    ? (projects.find((p) => p.id === entry.project_id)?.name ?? "Unknown")
+    : "No project";
+  const elapsed = Math.floor((Date.now() - new Date(entry.start).getTime()) / 1000);
+  const desc = entry.description || "(no description)";
+  console.log(`Running: [${project}] ${desc} (${formatDuration(elapsed)})`);
+}
+
+async function startEntry(args: string[]) {
+  const { values } = parseArgs({
+    args,
+    options: {
+      project: { type: "string" },
+      description: { type: "string", default: "" },
+    },
+    allowPositionals: true,
+  });
+
+  if (!values.project) {
+    console.error("Usage: bun src/entries.ts start --project NAME [--description TEXT]");
+    process.exit(1);
+  }
+
+  const [wid, projects] = await Promise.all([getWorkspaceId(), getProjects()]);
+
+  const match = projects.find((p) => p.name.toLowerCase() === values.project!.toLowerCase());
+  if (!match) {
+    console.error(`Project "${values.project}" not found. Available projects:`);
+    for (const p of projects.filter((p) => p.active)) {
+      console.error(`  - ${p.name}`);
+    }
+    process.exit(1);
+  }
+
+  const now = new Date().toISOString();
+  await togglPost(`/workspaces/${wid}/time_entries`, {
+    workspace_id: wid,
+    project_id: match.id,
+    start: now,
+    duration: -1,
+    description: values.description,
+    created_with: "toggl-cli",
+  });
+
+  console.log(`Started: [${match.name}] ${values.description || "(no description)"}`);
+}
+
+async function stopEntry() {
+  const entry = await togglGet<TimeEntry | null>("/me/time_entries/current");
+
+  if (!entry) {
+    console.log("No timer running.");
+    return;
+  }
+
+  const wid = await getWorkspaceId();
+  await togglPatch(`/workspaces/${wid}/time_entries/${entry.id}/stop`);
+
+  const elapsed = Math.floor((Date.now() - new Date(entry.start).getTime()) / 1000);
+  const projects = await getProjects();
+  const project = entry.project_id
+    ? (projects.find((p) => p.id === entry.project_id)?.name ?? "Unknown")
+    : "No project";
+  const desc = entry.description || "(no description)";
+  console.log(`Stopped: [${project}] ${desc} (${formatDuration(elapsed)})`);
+}
+
 switch (subcommand) {
   case "list":
     await listEntries(process.argv.slice(3));
@@ -127,9 +206,21 @@ switch (subcommand) {
   case "add":
     await addEntry(process.argv.slice(3));
     break;
+  case "current":
+    await currentEntry();
+    break;
+  case "start":
+    await startEntry(process.argv.slice(3));
+    break;
+  case "stop":
+    await stopEntry();
+    break;
   default:
-    console.error("Usage: bun src/entries.ts <list|add>");
-    console.error("  list [--from DATE] [--to DATE]");
+    console.error("Usage: bun src/entries.ts <command>");
+    console.error("  current                                        show running timer");
+    console.error('  start --project NAME [--description "..."]     start a timer');
+    console.error("  stop                                           stop running timer");
+    console.error("  list [--from DATE] [--to DATE]                 list entries");
     console.error(
       '  add --project NAME --date YYYY-MM-DD --start HH:MM --end HH:MM [--description "..."]',
     );
