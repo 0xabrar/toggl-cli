@@ -16,11 +16,18 @@ function headers(): Record<string, string> {
   return { Authorization: getAuthHeader(), "Content-Type": "application/json" };
 }
 
+function handleError(method: string, path: string, status: number, body: string): never {
+  if (status === 429 || (status === 402 && body.includes("hourly limit"))) {
+    const match = body.match(/reset in (\d+) seconds/);
+    const wait = match ? `${Math.ceil(Number(match[1]) / 60)} minutes` : "a bit";
+    throw new Error(`Rate limited. Try again in ${wait}.`);
+  }
+  throw new Error(`${method} ${path}: ${status} ${body}`);
+}
+
 export async function togglGet<T = unknown>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: headers(),
-  });
-  if (!res.ok) throw new Error(`GET ${path}: ${res.status} ${await res.text()}`);
+  const res = await fetch(`${BASE_URL}${path}`, { headers: headers() });
+  if (!res.ok) handleError("GET", path, res.status, await res.text());
   return res.json() as Promise<T>;
 }
 
@@ -30,7 +37,7 @@ export async function togglPost<T = unknown>(path: string, body: unknown): Promi
     headers: headers(),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`POST ${path}: ${res.status} ${await res.text()}`);
+  if (!res.ok) handleError("POST", path, res.status, await res.text());
   return res.json() as Promise<T>;
 }
 
@@ -40,7 +47,17 @@ export async function togglPut<T = unknown>(path: string, body: unknown): Promis
     headers: headers(),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`PUT ${path}: ${res.status} ${await res.text()}`);
+  if (!res.ok) handleError("PUT", path, res.status, await res.text());
+  return res.json() as Promise<T>;
+}
+
+export async function togglPatch<T = unknown>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "PATCH",
+    headers: headers(),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) handleError("PATCH", path, res.status, await res.text());
   return res.json() as Promise<T>;
 }
 
@@ -50,7 +67,7 @@ export async function reportsPost<T = unknown>(path: string, body: unknown): Pro
     headers: headers(),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`REPORTS POST ${path}: ${res.status} ${await res.text()}`);
+  if (!res.ok) handleError("REPORTS POST", path, res.status, await res.text());
   return res.json() as Promise<T>;
 }
 
