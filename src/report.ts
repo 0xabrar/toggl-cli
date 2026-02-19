@@ -1,10 +1,4 @@
-import {
-  getWorkspaceId,
-  getProjects,
-  reportsPost,
-  parseDate,
-  formatDuration,
-} from "./api";
+import { getWorkspaceId, getProjects, reportsPost, parseDate, formatDuration } from "./api";
 import { parseArgs } from "util";
 
 const { values } = parseArgs({
@@ -39,10 +33,7 @@ const rows: { name: string; seconds: number }[] = [];
 let totalSeconds = 0;
 
 for (const group of report.groups) {
-  const seconds = group.sub_groups.reduce(
-    (sum, sg) => sum + sg.seconds,
-    0,
-  );
+  const seconds = group.sub_groups.reduce((sum, sg) => sum + sg.seconds, 0);
   if (seconds === 0) continue;
   rows.push({ name: projectMap.get(group.id) ?? `(unknown #${group.id})`, seconds });
   totalSeconds += seconds;
@@ -59,9 +50,7 @@ if (rows.length === 0) {
 
 const nameWidth = Math.max(...rows.map((r) => r.name.length), 7);
 
-console.log(
-  "Project".padEnd(nameWidth) + "  " + "Hours".padStart(8) + "  " + "%".padStart(5),
-);
+console.log("Project".padEnd(nameWidth) + "  " + "Hours".padStart(8) + "  " + "%".padStart(5));
 console.log("─".repeat(nameWidth + 17));
 
 for (const row of rows) {
@@ -76,6 +65,4 @@ for (const row of rows) {
 }
 
 console.log("─".repeat(nameWidth + 17));
-console.log(
-  "Total".padEnd(nameWidth) + "  " + formatDuration(totalSeconds).padStart(8),
-);
+console.log("Total".padEnd(nameWidth) + "  " + formatDuration(totalSeconds).padStart(8));

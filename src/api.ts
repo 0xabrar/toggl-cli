@@ -94,7 +94,9 @@ export async function getProjects(): Promise<Project[]> {
 }
 
 export async function refreshCache(): Promise<void> {
-  try { unlinkSync(CACHE_PATH); } catch {}
+  try {
+    unlinkSync(CACHE_PATH);
+  } catch {}
   await getWorkspaceId();
   console.log("Cache refreshed.");
 }

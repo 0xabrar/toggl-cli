@@ -22,28 +22,19 @@ async function listProjects() {
 
   active.sort((a, b) => (b.actual_seconds ?? 0) - (a.actual_seconds ?? 0));
 
-  console.log(
-    "Name".padEnd(35) + "Hours".padStart(10) + "  " + "Color"
-  );
+  console.log("Name".padEnd(35) + "Hours".padStart(10) + "  " + "Color");
   console.log("-".repeat(55));
 
   for (const p of active) {
     const hours = formatDuration(p.actual_seconds ?? 0);
-    console.log(
-      p.name.slice(0, 35).padEnd(35) + hours.padStart(10) + "  " + p.color
-    );
+    console.log(p.name.slice(0, 35).padEnd(35) + hours.padStart(10) + "  " + p.color);
   }
 
   console.log(`\n${active.length} active projects`);
 }
 
-async function findProject(
-  projects: Project[],
-  name: string
-): Promise<Project> {
-  const match = projects.find(
-    (p) => p.name.toLowerCase() === name.toLowerCase()
-  );
+async function findProject(projects: Project[], name: string): Promise<Project> {
+  const match = projects.find((p) => p.name.toLowerCase() === name.toLowerCase());
   if (!match) {
     console.error(`Project not found: "${name}"`);
     process.exit(1);
@@ -70,9 +61,7 @@ async function mergeProjects(sourceName: string, targetName: string) {
   const source = await findProject(projects, sourceName);
   const target = await findProject(projects, targetName);
 
-  console.log(
-    `Merging "${source.name}" (id: ${source.id}) -> "${target.name}" (id: ${target.id})`
-  );
+  console.log(`Merging "${source.name}" (id: ${source.id}) -> "${target.name}" (id: ${target.id})`);
 
   // Fetch time entries (API allows ~90 days lookback from today)
   const now = new Date();
@@ -81,7 +70,7 @@ async function mergeProjects(sourceName: string, targetName: string) {
   const startStr = start.toISOString().slice(0, 10);
   const endStr = now.toISOString().slice(0, 10);
   const entries = await togglGet<TimeEntry[]>(
-    `/me/time_entries?start_date=${startStr}&end_date=${endStr}`
+    `/me/time_entries?start_date=${startStr}&end_date=${endStr}`,
   );
   const sourceEntries = entries.filter((e) => e.project_id === source.id);
 
@@ -102,7 +91,7 @@ async function mergeProjects(sourceName: string, targetName: string) {
 
   console.log(`Moved ${moved} entries from "${source.name}" to "${target.name}"`);
   console.log(
-    `\nTip: You can archive "${source.name}" in Toggl settings if it's no longer needed.`
+    `\nTip: You can archive "${source.name}" in Toggl settings if it's no longer needed.`,
   );
   await refreshCache();
 }
@@ -120,9 +109,7 @@ switch (cmd) {
     break;
   case "merge":
     if (args.length < 2) {
-      console.error(
-        'Usage: bun src/projects.ts merge "Source" "Target"'
-      );
+      console.error('Usage: bun src/projects.ts merge "Source" "Target"');
       process.exit(1);
     }
     await mergeProjects(args[0]!, args[1]!);

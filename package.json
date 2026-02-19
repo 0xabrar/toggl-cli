@@ -2,6 +2,12 @@
   "name": "toggl-cli",
   "type": "module",
   "private": true,
+  "scripts": {
+    "lint": "bunx oxlint src/",
+    "format": "bunx oxfmt src/",
+    "format:check": "bunx oxfmt --check src/",
+    "test": "bun test"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
