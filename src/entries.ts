@@ -26,7 +26,7 @@ async function listEntries(args: string[]) {
 
   const [entries, projects] = await Promise.all([
     togglGet<TimeEntry[]>(
-      `/me/time_entries?start_date=${fromDate}T00:00:00Z&end_date=${toDate}T23:59:59Z`
+      `/me/time_entries?start_date=${fromDate}T00:00:00Z&end_date=${toDate}T23:59:59Z`,
     ),
     getProjects(),
   ]);
@@ -36,9 +36,7 @@ async function listEntries(args: string[]) {
     projectMap.set(p.id, p.name);
   }
 
-  const sorted = entries.sort(
-    (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
-  );
+  const sorted = entries.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
   if (sorted.length === 0) {
     console.log(`No entries from ${fromDate} to ${toDate}`);
@@ -47,7 +45,7 @@ async function listEntries(args: string[]) {
 
   console.log(`Entries from ${fromDate} to ${toDate}:\n`);
   for (const e of sorted) {
-    const project = e.project_id ? projectMap.get(e.project_id) ?? "Unknown" : "No project";
+    const project = e.project_id ? (projectMap.get(e.project_id) ?? "Unknown") : "No project";
     const start = new Date(e.start).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
@@ -80,18 +78,15 @@ async function addEntry(args: string[]) {
   });
 
   if (!values.project || !values.date || !values.start || !values.end) {
-    console.error("Usage: bun src/entries.ts add --project NAME --date YYYY-MM-DD --start HH:MM --end HH:MM [--description TEXT]");
+    console.error(
+      "Usage: bun src/entries.ts add --project NAME --date YYYY-MM-DD --start HH:MM --end HH:MM [--description TEXT]",
+    );
     process.exit(1);
   }
 
-  const [wid, projects] = await Promise.all([
-    getWorkspaceId(),
-    getProjects(),
-  ]);
+  const [wid, projects] = await Promise.all([getWorkspaceId(), getProjects()]);
 
-  const match = projects.find(
-    (p) => p.name.toLowerCase() === values.project!.toLowerCase()
-  );
+  const match = projects.find((p) => p.name.toLowerCase() === values.project!.toLowerCase());
   if (!match) {
     console.error(`Project "${values.project}" not found. Available projects:`);
     for (const p of projects.filter((p) => p.active)) {
@@ -121,7 +116,7 @@ async function addEntry(args: string[]) {
   });
 
   console.log(
-    `Created entry: [${match.name}] ${values.start}-${values.end} (${formatDuration(duration)}) ${values.description || ""}`
+    `Created entry: [${match.name}] ${values.start}-${values.end} (${formatDuration(duration)}) ${values.description || ""}`,
   );
 }
 
@@ -135,6 +130,8 @@ switch (subcommand) {
   default:
     console.error("Usage: bun src/entries.ts <list|add>");
     console.error("  list [--from DATE] [--to DATE]");
-    console.error('  add --project NAME --date YYYY-MM-DD --start HH:MM --end HH:MM [--description "..."]');
+    console.error(
+      '  add --project NAME --date YYYY-MM-DD --start HH:MM --end HH:MM [--description "..."]',
+    );
     process.exit(1);
 }
