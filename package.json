@@ -9,7 +9,7 @@
     "test": "bun test"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "1.3.9"
   },
   "peerDependencies": {
     "typescript": "^5"
